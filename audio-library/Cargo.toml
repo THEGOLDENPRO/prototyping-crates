@@ -1,0 +1,8 @@
+[package]
+name = "audio-library"
+description = "Local and remote audio libraries finder, parser and metadata collector."
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+lofty = "0.24.0"
