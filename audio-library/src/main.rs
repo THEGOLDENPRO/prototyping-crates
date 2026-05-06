@@ -1,11 +1,12 @@
 use std::{fs::File, io::{BufReader, Read}, path::PathBuf};
 
+use audio_library::{inference::{AudioTitleParseRules, infer_and_parse_audio_title_from_path}, track::{Track, metadata::{Metadata, MetadataField}}};
 use infer::MatcherType;
-use lofty::{file::FileType, probe::Probe as LoftyProbe};
+use lofty::{file::{FileType, TaggedFileExt}, probe::Probe as LoftyProbe, tag::{Accessor, ItemKey}};
 use log::{LevelFilter, debug, error};
 use walkdir::WalkDir;
 
-type Probe<'a> = LoftyProbe<&'a mut BufReader<File>>;
+pub type Probe<'a> = LoftyProbe<BufReader<File>>;
 
 fn main() {
     env_logger::builder()
@@ -27,7 +28,17 @@ fn main() {
             continue;
         }
 
-        let audio_file_name = library_entry.file_name().display();
+        let audio_file_name = library_entry.file_name().to_string_lossy().to_string();
+
+        let inferred_title = infer_and_parse_audio_title_from_path(
+            &library_path,
+            &audio_file_name,
+            AudioTitleParseRules::default()
+        );
+
+        let mut metadata = Metadata {
+            title: MetadataField { value: inferred_title, inferred: true}
+        };
 
         let audio_file = File::open(library_path).unwrap();
         let mut audio_file_buf_reader = BufReader::new(audio_file);
@@ -87,9 +98,31 @@ fn main() {
             },
         };
 
-        let audio_probe = Probe::new(&mut audio_file_buf_reader)
+        let lofty_probe = Probe::new(audio_file_buf_reader)
             .set_file_type(lofty_file_type);
 
-        println!("{:?}", audio_probe.file_type());
+        match lofty_probe.read() {
+            Ok(tagged_file) => {
+                if let Some(tag) = tagged_file.primary_tag() {
+                    if let Some(title_string) = tag.title() {
+                        metadata.title = MetadataField {
+                            value: title_string.to_string(),
+                            inferred: false
+                        };
+                    }
+                };
+            },
+            Err(error) => {
+                // TODO: failed metadata extraction list maybe??
+                log::warn!(
+                    "Failed to extract tags from the audio file '{audio_file_name}'! \
+                        This file will lack metadata! Error: {error}"
+                );
+            },
+        }
+
+        let track = Track { metadata };
+
+        println!("{:?}", *track.metadata.title);
     }
 }
