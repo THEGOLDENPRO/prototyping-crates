@@ -123,6 +123,6 @@ fn main() {
 
         let track = Track { metadata };
 
-        println!("{:?}", *track.metadata.title);
+        println!("Name: {:?}", *track.metadata.title);
     }
 }

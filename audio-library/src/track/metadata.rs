@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Deref};
+use std::ops::Deref;
 
 pub struct Metadata {
     pub title: MetadataField<String>,
