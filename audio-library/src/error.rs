@@ -1,4 +1,6 @@
-use std::fmt::Display;
+use std::{fmt::Display, result::Result as StdResult};
+
+pub type Result<T, E = Error> = StdResult<T, E>;
 
 #[derive(Debug)]
 pub enum Error {}

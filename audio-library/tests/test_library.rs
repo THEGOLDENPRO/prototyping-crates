@@ -1,9 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use core::panic;
     use std::path::PathBuf;
 
-    use audio_library::{library::Library, source::{LocalSource, Source}};
+    use audio_library::library::{Library, source::{LibraryLocalSource, LibrarySource}};
 
     #[test]
     fn test_library() {
@@ -13,8 +12,8 @@ mod tests {
         assert_eq!(messy_library_path.exists(), true);
 
         let library = Library {
-            source: Source::Local(
-                LocalSource::Directory(messy_library_path)
+            source: LibrarySource::Local(
+                LibraryLocalSource::Directory(messy_library_path)
             )
         };
 

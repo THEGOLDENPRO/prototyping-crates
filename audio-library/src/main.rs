@@ -1,12 +1,14 @@
-use std::{fs::File, io::{BufReader, Read}, path::PathBuf};
+use std::{fs::File, io::{BufReader, Read, Seek}, path::PathBuf};
 
-use audio_library::{inference::{AudioTitleParseRules, infer_and_parse_audio_title_from_path}, track::{Track, metadata::{Metadata, MetadataField}}};
+use audio_library::{error::Result, inference::{AudioTitleParseRules, infer_and_parse_audio_title_from_path}, track::{Track, metadata::{Metadata, MetadataField}}};
 use infer::MatcherType;
-use lofty::{file::{FileType, TaggedFileExt}, probe::Probe as LoftyProbe, tag::{Accessor, ItemKey}};
+use lofty::{aac::AacFile, ape::ApeFile, config::ParseOptions, error::{ErrorKind, LoftyError}, file::{AudioFile, FileType, TaggedFile, TaggedFileExt}, flac::FlacFile, iff::{aiff::AiffFile, wav::WavFile}, mp4::Mp4File, mpeg::MpegFile, musepack::MpcFile, ogg::{OpusFile, SpeexFile, VorbisFile}, probe::Probe as LoftyProbe, tag::Accessor, wavpack::WavPackFile};
 use log::{LevelFilter, debug, error};
 use walkdir::WalkDir;
 
 pub type Probe<'a> = LoftyProbe<BufReader<File>>;
+
+// TODO: move main.rs logic to directory source
 
 fn main() {
     env_logger::builder()
@@ -98,10 +100,7 @@ fn main() {
             },
         };
 
-        let lofty_probe = Probe::new(audio_file_buf_reader)
-            .set_file_type(lofty_file_type);
-
-        match lofty_probe.read() {
+        match read_and_parse_audio_file_header(&mut audio_file_buf_reader, lofty_file_type) {
             Ok(tagged_file) => {
                 if let Some(tag) = tagged_file.primary_tag() {
                     if let Some(title_string) = tag.title() {
@@ -121,8 +120,30 @@ fn main() {
             },
         }
 
-        let track = Track { metadata };
+        let track = Track { metadata, buf_reader: audio_file_buf_reader };
 
         println!("Name: {:?}", *track.metadata.title);
     }
+}
+
+fn read_and_parse_audio_file_header<R: Read + Seek>(audio_file_buf_reader: &mut BufReader<R>, file_type: FileType) -> Result<TaggedFile, LoftyError> {
+    let parse_options = ParseOptions::default();
+
+    let tagged_file: TaggedFile = match file_type {
+        FileType::Aac => AacFile::read_from(audio_file_buf_reader, parse_options)?.into(),
+        FileType::Aiff => AiffFile::read_from(audio_file_buf_reader, parse_options)?.into(),
+        FileType::Ape => ApeFile::read_from(audio_file_buf_reader, parse_options)?.into(),
+        FileType::Flac => FlacFile::read_from(audio_file_buf_reader, parse_options)?.into(),
+        FileType::Mpeg => MpegFile::read_from(audio_file_buf_reader, parse_options)?.into(),
+        FileType::Opus => OpusFile::read_from(audio_file_buf_reader, parse_options)?.into(),
+        FileType::Vorbis => VorbisFile::read_from(audio_file_buf_reader, parse_options)?.into(),
+        FileType::Wav => WavFile::read_from(audio_file_buf_reader, parse_options)?.into(),
+        FileType::Mp4 => Mp4File::read_from(audio_file_buf_reader, parse_options)?.into(),
+        FileType::Mpc => MpcFile::read_from(audio_file_buf_reader, parse_options)?.into(),
+        FileType::Speex => SpeexFile::read_from(audio_file_buf_reader, parse_options)?.into(),
+        FileType::WavPack => WavPackFile::read_from(audio_file_buf_reader, parse_options)?.into(),
+        unsupported_type => return Err(LoftyError::new(ErrorKind::UnknownFormat)),
+    };
+
+    Ok(tagged_file)
 }

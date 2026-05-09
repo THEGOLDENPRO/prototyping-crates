@@ -2,7 +2,7 @@
 // umm thinking about how I would go about this...
 // might just detect all structure types but only to get missing metadata (album, author)
 
-pub enum LocalLibraryStructure {
+pub enum DirectoryStructure {
     /// Structural Examples:
     /// - `Album Name / Audio Track Title`
     /// - `Artist Name / Audio Track Title`
