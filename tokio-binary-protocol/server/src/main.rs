@@ -1,10 +1,10 @@
-use std::process::ExitCode;
+use std::{process::ExitCode};
 
 use futures::StreamExt;
 use tokio::{net::TcpListener};
 use tokio_util::codec::{FramedRead, LengthDelimitedCodec};
 
-use common::payload::Payload;
+use common::{DEFAULT_IP, DEFAULT_PORT, env_var::get_env_var, payload::Payload};
 
 use crate::error::{Error, Result};
 
@@ -14,7 +14,10 @@ mod error;
 async fn main() -> ExitCode {
     env_logger::init();
 
-    if let Err(error) = start_server().await {
+    let host = get_env_var("TBP_HOST", String::from(DEFAULT_IP));
+    let port = get_env_var("TBP_PORT", DEFAULT_PORT);
+
+    if let Err(error) = start_server(host, port).await {
         log::error!("{}", error);
 
         return ExitCode::FAILURE;
@@ -23,11 +26,11 @@ async fn main() -> ExitCode {
     ExitCode::SUCCESS
 }
 
-pub async fn start_server() -> Result<()> {
-    let listener = TcpListener::bind("127.0.0.1:8080").await
+pub async fn start_server(host: String, port: u16) -> Result<()> {
+    let listener = TcpListener::bind(format!("{host}:{port}")).await
         .map_err(|error| Error::TCPListenerBindFailure { error: error.to_string() })?;
 
-    log::info!("Server is listening...");
+    log::info!("Server is listening on ip and port '{host}:{port}'...");
 
     loop {
         let (tcp_stream, address) = listener.accept().await

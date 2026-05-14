@@ -1,11 +1,11 @@
 #![cfg_attr(feature = "nightly-gethostname", feature(gethostname))]
 
 use std::time::Duration;
-use tokio::{net::TcpStream, time::sleep};
 use futures::sink::SinkExt;
+use tokio::{net::TcpStream, time::sleep};
 use tokio_util::codec::{FramedWrite, LengthDelimitedCodec};
 
-use common::payload::{Payload, PayloadData};
+use common::{DEFAULT_IP, DEFAULT_PORT, env_var::get_env_var, payload::{Payload, PayloadData}};
 
 // #[derive(Serialize)]
 // struct WrongPayload {}
@@ -14,7 +14,10 @@ use common::payload::{Payload, PayloadData};
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
 
-    let stream = TcpStream::connect("127.0.0.1:8080").await?;
+    let host = get_env_var("TBP_HOST", String::from(DEFAULT_IP));
+    let port = get_env_var("TBP_PORT", DEFAULT_PORT);
+
+    let stream = TcpStream::connect(format!("{host}:{port}")).await?;
 
     // Essentially wraps the TCP stream so we know where the  
     // message starts and ends in the stream of data we are receiving.
@@ -48,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     sleep(Duration::from_secs(2)).await; // some random delay I used to debug bottlenecks on the server 
 
-    framed_write.send(payload_bytes.to_vec().into()).await?;
+    framed_write.send(payload_bytes.to_vec().into()).await?;    
 
     Ok(())
 }

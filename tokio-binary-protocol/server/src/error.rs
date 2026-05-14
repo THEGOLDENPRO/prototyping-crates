@@ -4,7 +4,7 @@ pub type Result<T, E = Error> = StdResult<T, E>;
 
 pub enum Error {
     TCPListenerBindFailure { error: String },
-    TCPListenerAcceptConnectionsFailure { error: String }
+    TCPListenerAcceptConnectionsFailure { error: String },
 }
 
 impl Display for Error {
