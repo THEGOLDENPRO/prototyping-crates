@@ -12,3 +12,6 @@ futures = { workspace = true}
 postcard = { workspace = true }
 tokio-util = { workspace = true }
 tokio = { workspace = true, features = ["time"] }
+
+[features]
+nightly-gethostname = [] # requires nightly compiler for now

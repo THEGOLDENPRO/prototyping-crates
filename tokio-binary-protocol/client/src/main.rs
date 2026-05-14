@@ -1,6 +1,6 @@
-#![feature(gethostname)]
+#![cfg_attr(feature = "nightly-gethostname", feature(gethostname))]
 
-use std::{net::hostname, time::Duration};
+use std::time::Duration;
 use tokio::{net::TcpStream, time::sleep};
 use futures::sink::SinkExt;
 use tokio_util::codec::{FramedWrite, LengthDelimitedCodec};
@@ -23,10 +23,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         LengthDelimitedCodec::new()
     );
 
-    let hostname_string = hostname()
-        .unwrap()
-        .into_string()
-        .unwrap();
+    let hostname_string = {
+        #[cfg(feature = "nightly-gethostname")]
+        {
+            use std::net::hostname;
+            hostname()
+                .unwrap()
+                .into_string()
+                .unwrap()
+        }
+
+        #[cfg(not(feature = "nightly-gethostname"))]
+        {
+            String::from("N/A")
+        }
+    };
 
     let payload = Payload {
         hostname: hostname_string,
