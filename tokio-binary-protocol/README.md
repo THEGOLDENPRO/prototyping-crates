@@ -5,7 +5,7 @@ Run the server first in debug with:
 RUST_LOG=DEBUG cargo run -p server
 ```
 
-> The server will bind on `localhost` TCP port `8080` by default. You can change this on both the client and server with environment variables `TBP_HOST` and `TBP_PORT`.
+> The server will bind on `localhost` TCP port `7185` by default. You can change this on both the client and server with environment variables `TBP_HOST` and `TBP_PORT`.
 
 Then you can run the client:
 ```sh
