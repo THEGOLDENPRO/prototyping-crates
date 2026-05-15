@@ -1,10 +1,11 @@
+import sys
 from subprocess import Popen
 
 last_popen: Popen
 
-for i in range(900):
+for i in range(100):
     last_popen = Popen(["./target/debug/client"])
 
-    print(f"client '{i}' done")
+    sys.stdout.write(f"client '{i}' done \n")
 
 last_popen.wait()
