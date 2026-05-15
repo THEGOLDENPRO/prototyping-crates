@@ -1,5 +1,7 @@
 use std::ops::Deref;
 
+// TODO: add track release date and cover.
+
 pub struct Metadata {
     pub title: MetadataField<String>,
 }
