@@ -1,10 +1,10 @@
 use std::{process::ExitCode};
 
-use futures::StreamExt;
+use futures::{SinkExt, StreamExt};
 use tokio::{net::TcpListener};
-use tokio_util::codec::{FramedRead, LengthDelimitedCodec};
+use tokio_util::codec::{FramedRead, FramedWrite, LengthDelimitedCodec};
 
-use common::{DEFAULT_IP, DEFAULT_PORT, env_var::get_env_var, payload::Payload};
+use common::{DEFAULT_IP, DEFAULT_PORT, env_var::get_env_var, payload::{Payload, PayloadData}};
 
 use crate::error::{Error, Result};
 
@@ -33,18 +33,25 @@ pub async fn start_server(host: String, port: u16) -> Result<()> {
     log::info!("Server is listening on ip and port '{host}:{port}'...");
 
     loop {
-        let (tcp_stream, address) = listener.accept().await
+        let (mut tcp_stream, address) = listener.accept().await
             .map_err(|error| Error::TCPListenerAcceptConnectionsFailure { error: error.to_string() })?;
 
         tokio::spawn(
             async move {
+                let (read_half, write_half) = tcp_stream.split();
+
                 log::debug!("Accepting new TCP connection from '{address}'...");
 
                 // Of course on the receiving end we also got to 
                 // wrap the TCP stream but in this case with 
                 // "FramedRead" instead of "FramedWrite".
                 let mut framed_read = FramedRead::new(
-                    tcp_stream,
+                    read_half,
+                    LengthDelimitedCodec::new()
+                );
+
+                let mut framed_write = FramedWrite::new(
+                    write_half,
                     LengthDelimitedCodec::new()
                 );
 
@@ -62,6 +69,25 @@ pub async fn start_server(host: String, port: u16) -> Result<()> {
                             };
 
                             log::info!("Received '{:?}' from '{}'.", payload, address);
+
+                            match payload.data {
+                                PayloadData::Hello => {
+                                    log::debug!("Responding back to client '{address}' HELLO...");
+
+                                    let payload = Payload {
+                                        hostname: String::from("some server hostname"),
+                                        data: PayloadData::Hello
+                                    };
+
+                                    let payload_bytes = postcard::to_stdvec(&payload).unwrap();
+
+                                    if let Err(error) = framed_write.send(payload_bytes.into()).await {
+                                        log::error!(
+                                            "Failed to send HELLO back to the client '{address}'! Error: {error}"
+                                        );
+                                    }
+                                },
+                            }
                         },
                         Err(error) => {
                             log::debug!("Received unexpected data from '{address}'! Error: {error}");
@@ -70,7 +96,5 @@ pub async fn start_server(host: String, port: u16) -> Result<()> {
                 }
             }
         );
-
-
     }
 }
