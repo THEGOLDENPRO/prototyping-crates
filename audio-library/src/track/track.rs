@@ -1,10 +1,10 @@
-use std::io::{BufReader, Read, Seek};
+use std::io::BufReader;
 
-use crate::track::metadata::Metadata;
+use crate::track::{metadata::Metadata, reader::TrackReader};
 
-pub struct Track<R: Read + Seek> {
+pub struct Track {
     pub metadata: Metadata,
-    pub buf_reader: BufReader<R>,
+    pub buf_reader: BufReader<TrackReader>,
 }
 
-impl<R: Read + Seek> Track<R> {}
+impl Track {}

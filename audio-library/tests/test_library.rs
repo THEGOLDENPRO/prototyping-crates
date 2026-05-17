@@ -2,7 +2,7 @@
 mod tests {
     use std::path::PathBuf;
 
-    use audio_library::library::{Library, source::{LibraryLocalSource, LibrarySource}};
+    use audio_library::{library::{Library, source::LibrarySource}, sources::directory::Directory};
 
     #[test]
     fn test_library() {
@@ -11,11 +11,11 @@ mod tests {
 
         assert_eq!(messy_library_path.exists(), true);
 
-        let library = Library {
-            source: LibrarySource::Local(
-                LibraryLocalSource::Directory(messy_library_path)
-            )
-        };
+        let directory = Directory { path: messy_library_path };
+
+        let library = Library::new(
+            LibrarySource::Directory(directory)
+        );
 
         // TODO: test library parsing and check for correct track metadata
     }

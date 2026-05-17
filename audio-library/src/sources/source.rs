@@ -1,11 +1,13 @@
-use std::io::{Read, Seek};
+use crate::{error::Error, track::Track};
 
-use crate::track::Track;
+pub trait Source { // TODO: make "pub(crate)"
+    type TrackIterator;
 
-pub trait Source {
-    // NOTE: for now a vector for testing 
-    // but this will very likely change.
+    fn get_tracks(&self) -> Self::TrackIterator;
+}
 
-    /// Get and construct tracks from source.
-    fn get_tracks<R: Read + Seek>(&self) -> Vec<Track<R>>;
+pub enum SourceTrackResult {
+    Track(Track),
+    PartialTrack(Track, Vec<Error>),
+    Error(Error)
 }
