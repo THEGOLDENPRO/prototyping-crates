@@ -16,9 +16,9 @@ mod tests {
             options: DirectoryOptions::default()
         };
 
-        let library = Library::new(
-            LibrarySource::Directory(directory)
-        );
+        let mut library = Library::new();
+
+        library.add_source(LibrarySource::Directory(directory));
 
         // TODO: test library parsing and check for correct track metadata
     }

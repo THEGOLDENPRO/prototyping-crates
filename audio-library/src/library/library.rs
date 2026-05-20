@@ -9,7 +9,13 @@ pub struct Library {
 }
 
 impl Library {
-    pub fn new(source: LibrarySource) {
+    pub fn new() -> Self {
+        Self {
+            tracks: HashMap::new()
+        }
+    }
+
+    pub fn add_source(&mut self, source: LibrarySource) {
         todo!()
     }
 }
