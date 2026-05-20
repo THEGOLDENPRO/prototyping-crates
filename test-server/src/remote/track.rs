@@ -1,4 +1,4 @@
-use crate::{error::Error, remote::RemoteServer, traits::track::TracksAPI};
+use crate::{api::TracksAPI, error::Error, remote::RemoteServer};
 
 impl TracksAPI for RemoteServer {
     fn get_tracks(&self) -> crate::error::Result<Vec<String>> {
