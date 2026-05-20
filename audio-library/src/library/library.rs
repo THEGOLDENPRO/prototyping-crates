@@ -5,7 +5,7 @@ use crate::{library::source::LibrarySource, track::Track};
 pub type TrackLibraryID = u32; 
 
 pub struct Library {
-    pub tracks: HashMap<TrackLibraryID, Track>
+    pub tracks: HashMap<TrackLibraryID, Track>,
 }
 
 impl Library {

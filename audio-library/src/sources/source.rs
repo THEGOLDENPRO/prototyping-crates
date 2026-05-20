@@ -1,10 +1,11 @@
 use crate::{error::Error, track::Track};
 
-pub trait Source { // TODO: make "pub(crate)"
-    type TrackIterator;
-
-    fn get_tracks(&self) -> Self::TrackIterator;
+// TODO: make "pub(crate)"
+pub trait Source {
+    fn get_tracks(&self) -> impl Iterator<Item = SourceTrackResult>;
 }
+
+pub trait SourceOptions: Default + Clone {}
 
 pub enum SourceTrackResult {
     Track(Track),

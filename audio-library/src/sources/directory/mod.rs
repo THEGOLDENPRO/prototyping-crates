@@ -1,4 +1,5 @@
 mod directory;
 pub use directory::*;
 
-pub(self) mod structure;
+mod structure;
+mod track_iterator;

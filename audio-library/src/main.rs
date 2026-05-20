@@ -1,20 +1,19 @@
 use log::LevelFilter;
 use std::path::PathBuf;
-use audio_library::sources::{Source, SourceTrackResult, directory::Directory};
+use audio_library::sources::{Source, SourceTrackResult, directory::{Directory, DirectoryOptions}};
 
 fn main() {
     env_logger::builder()
         .filter_level(LevelFilter::Debug)
         .init();
 
-    const STRICT_MODE: bool = true;
-
-    const USE_FILE_EXTENSION: bool = STRICT_MODE;
-
     let messy_library_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests").join("data").join("messy-library");
 
-    let directory = Directory { path: messy_library_path };
+    let directory = Directory {
+        path: messy_library_path,
+        options: DirectoryOptions::default()
+    };
 
     for track_result in directory.get_tracks() {
         match track_result {

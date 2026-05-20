@@ -2,7 +2,7 @@
 mod tests {
     use std::path::PathBuf;
 
-    use audio_library::{library::{Library, source::LibrarySource}, sources::directory::Directory};
+    use audio_library::{library::{Library, source::LibrarySource}, sources::directory::{Directory, DirectoryOptions}};
 
     #[test]
     fn test_library() {
@@ -11,7 +11,10 @@ mod tests {
 
         assert_eq!(messy_library_path.exists(), true);
 
-        let directory = Directory { path: messy_library_path };
+        let directory = Directory {
+            path: messy_library_path,
+            options: DirectoryOptions::default()
+        };
 
         let library = Library::new(
             LibrarySource::Directory(directory)
