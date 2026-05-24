@@ -2,7 +2,7 @@
 mod tests {
     use std::thread;
 
-use test_server::{event::Event, local::LocalServer, server::Server};
+use test_server_lib::{event::Event, local::LocalServer, server::Server};
     #[test]
     fn test_server_gateway() -> Result<(), Box<dyn std::error::Error>> {
         let server = Server::new(LocalServer {});
