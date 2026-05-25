@@ -2,10 +2,10 @@
 mod tests {
     use std::path::PathBuf;
 
-    use audio_library::{library::{Library, source::LibrarySource}, sources::directory::{Directory, DirectoryOptions}};
+use audio_library::sources::{SourceTrack, directory::{Directory, DirectoryOptions}};
 
     #[test]
-    fn test_library() {
+    fn test_directory_source() {
         let messy_library_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("tests").join("data").join("messy-library");
 
@@ -16,9 +16,7 @@ mod tests {
             options: DirectoryOptions::default()
         };
 
-        let mut library = Library::new();
-
-        library.add_source(LibrarySource::Directory(directory));
+        let tracks_iter = directory.get_tracks();
 
         // TODO: test library parsing and check for correct track metadata
     }

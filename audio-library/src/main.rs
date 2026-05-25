@@ -1,6 +1,6 @@
 use log::LevelFilter;
 use std::path::PathBuf;
-use audio_library::sources::{Source, SourceTrackResult, directory::{Directory, DirectoryOptions}};
+use audio_library::sources::{SourceTrack, SourceTrackResult, directory::{Directory, DirectoryOptions}};
 
 fn main() {
     env_logger::builder()

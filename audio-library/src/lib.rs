@@ -1,6 +1,5 @@
 pub mod track;
 pub mod sources;
-pub mod library;
 pub mod error;
 
 // TODO: should be private going forward
