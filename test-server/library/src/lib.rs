@@ -1,4 +1,5 @@
 mod api;
+mod library;
 
 pub mod local;
 pub mod remote;

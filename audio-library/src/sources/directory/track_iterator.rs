@@ -4,7 +4,7 @@ use infer::MatcherType;
 use lofty::{aac::AacFile, ape::ApeFile, config::ParseOptions, error::{ErrorKind, LoftyError}, file::{AudioFile, FileType, TaggedFile, TaggedFileExt}, flac::FlacFile, iff::{aiff::AiffFile, wav::WavFile}, mp4::Mp4File, mpeg::MpegFile, musepack::MpcFile, ogg::{OpusFile, SpeexFile, VorbisFile}, tag::Accessor, wavpack::WavPackFile};
 use walkdir::IntoIter as WalkDirIterator;
 
-use crate::{error::Error, inference::{AudioTitleParseRules, infer_and_parse_audio_title_from_path}, sources::{SourceTrackResult, directory::DirectoryOptions}, track::{Track, metadata::{Metadata, MetadataField}, reader::TrackReader}};
+use crate::{error::Error, inference::{AudioTitleParseRules, infer_and_parse_audio_title_from_path}, sources::{directory::DirectoryOptions, result::SourceTrackResult}, track::{Track, metadata::{Metadata, MetadataField}, reader::TrackReader}};
 
 pub struct DirectoryTrackIterator {
     pub walk_dir_iterator: WalkDirIterator,

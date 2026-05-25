@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use walkdir::WalkDir;
 
-use crate::sources::{Source, SourceOptions, SourceTrack, directory::track_iterator::DirectoryTrackIterator};
+use crate::sources::{directory::track_iterator::DirectoryTrackIterator, traits::{Source, SourceOptions, SourceTrack}};
 
 pub struct Directory {
     pub path: PathBuf,
