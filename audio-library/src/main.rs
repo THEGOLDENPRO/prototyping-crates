@@ -21,10 +21,7 @@ fn main() {
 
     let directory = Directory {
         path: library_path,
-        options: DirectoryOptions {
-            trust_file_extension: false,
-            skip_parsing_track_tags: true,
-        }
+        options: DirectoryOptions::default()
     };
 
     for track_result in directory.get_tracks() {
