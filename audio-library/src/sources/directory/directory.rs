@@ -2,24 +2,18 @@ use std::path::PathBuf;
 
 use walkdir::WalkDir;
 
-use crate::sources::{directory::track_iterator::DirectoryTrackIterator, traits::{Source, SourceOptions, SourceTrack}};
+use crate::sources::{directory::{options::DirectoryOptions, track_iterator::DirectoryTrackIterator}, traits::Source, r#type::SourceType};
 
 pub struct Directory {
     pub path: PathBuf,
     pub options: DirectoryOptions,
 }
 
-#[derive(Default, Clone)]
-pub struct DirectoryOptions {
-    pub trust_file_extension: bool
-}
+impl Source for Directory {
+    fn get_type(&self) -> SourceType {
+        SourceType::Directory { path: self.path.clone() }
+    }
 
-impl SourceOptions for DirectoryOptions {}
-
-impl Source for Directory {}
-
-impl SourceTrack for Directory {
-    // TODO: switch to 'pub(crate)' when main.rs no longer uses this.
     /// Get and construct tracks from a local directory on disk.
     #[allow(refining_impl_trait)]
     fn get_tracks(&self) -> DirectoryTrackIterator {
@@ -28,4 +22,12 @@ impl SourceTrack for Directory {
             options: self.options.clone()
         }
     }
+    
+    // this probably will change
+    // fn get_metadata(&self) -> SourceMetadata {
+    //     SourceMetadata {
+    //         location: format!("{}", self.path.display()),
+    //         friendly_name: None
+    //     }
+    // }
 }

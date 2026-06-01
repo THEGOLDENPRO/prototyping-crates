@@ -1,18 +1,20 @@
-use std::{fs::File, io::{BufReader, Read, Seek}};
+use std::{fs::File, io::{BufReader, Read, Seek, SeekFrom}};
 
 use infer::MatcherType;
 use lofty::{aac::AacFile, ape::ApeFile, config::ParseOptions, error::{ErrorKind, LoftyError}, file::{AudioFile, FileType, TaggedFile, TaggedFileExt}, flac::FlacFile, iff::{aiff::AiffFile, wav::WavFile}, mp4::Mp4File, mpeg::MpegFile, musepack::MpcFile, ogg::{OpusFile, SpeexFile, VorbisFile}, tag::Accessor, wavpack::WavPackFile};
 use walkdir::IntoIter as WalkDirIterator;
 
-use crate::{error::Error, inference::{AudioTitleParseRules, infer_and_parse_audio_title_from_path}, sources::{directory::DirectoryOptions, result::SourceTrackResult}, track::{Track, metadata::{Metadata, MetadataField}, reader::TrackReader}};
+use crate::{error::{Error, Result}, inference::{AudioTitleParseRules, infer_and_parse_audio_title}, sources::{directory::options::DirectoryOptions, traits::TrackIterator}, track::{Track, issues::TrackIssues, metadata::{Metadata, MetadataField}, reader::TrackReader}};
 
 pub struct DirectoryTrackIterator {
     pub walk_dir_iterator: WalkDirIterator,
     pub options: DirectoryOptions
 }
 
+impl TrackIterator for DirectoryTrackIterator {}
+
 impl Iterator for DirectoryTrackIterator {
-    type Item = SourceTrackResult;
+    type Item = Result<Track>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(library_entry) = self.walk_dir_iterator.next() {
@@ -20,9 +22,7 @@ impl Iterator for DirectoryTrackIterator {
                 Ok(dir_entry) => dir_entry,
                 Err(error) => {
                     return Some(
-                        SourceTrackResult::Error(
-                            Error::RecursiveWalkFailure { error: error.to_string() }
-                        )
+                        Err(Error::RecursiveWalkFailure { error: error.to_string() })
                     );
                 },
             };
@@ -35,9 +35,9 @@ impl Iterator for DirectoryTrackIterator {
 
             let audio_file_name = library_entry.file_name().to_string_lossy().to_string();
 
-            let inferred_title = infer_and_parse_audio_title_from_path(
-                &library_path,
+            let inferred_title = infer_and_parse_audio_title(
                 &audio_file_name,
+                &library_path,
                 AudioTitleParseRules::default()
             );
 
@@ -49,7 +49,7 @@ impl Iterator for DirectoryTrackIterator {
                 Ok(file) => file,
                 Err(error) => {
                     return Some(
-                        SourceTrackResult::Error(
+                        Err(
                             Error::FileOpenFailure {
                                 file_name: audio_file_name,
                                 error: error.to_string()
@@ -65,7 +65,7 @@ impl Iterator for DirectoryTrackIterator {
             let mut audio_file_header_buffer = [0; 64];
             if let Err(error) = audio_file_buf_reader.read_exact(&mut audio_file_header_buffer) {
                 return Some(
-                    SourceTrackResult::Error(
+                    Err(
                         Error::FileFormatReadHeaderFailure {
                             file_name: audio_file_name,
                             error: error.to_string()
@@ -96,12 +96,25 @@ impl Iterator for DirectoryTrackIterator {
                 },
                 None => {
                     return Some(
-                        SourceTrackResult::Error(
+                        Err(
                             Error::UnknownFileFormat { file_name: audio_file_name }
                         )
                     );
                 },
             };
+
+            if self.options.skip_parsing_track_tags {
+                return Some(
+                    Ok(
+                        Track {
+                            metadata,
+                            buf_reader: audio_file_buf_reader,
+
+                            issues: Vec::new()
+                        }
+                    )
+                )
+            }
 
             log::debug!("Parsing the detected file extension '{detected_file_extension_string}' to a lofty file type...");
 
@@ -109,7 +122,7 @@ impl Iterator for DirectoryTrackIterator {
                 Some(file_type) => file_type,
                 None => {
                     return Some(
-                        SourceTrackResult::Error(
+                        Err(
                             Error::AudioFormatExtensionParseFailure {
                                 audio_file_name,
                                 format: detected_file_extension_string.to_string()
@@ -119,7 +132,18 @@ impl Iterator for DirectoryTrackIterator {
                 },
             };
 
-            let source_track_result = match read_and_parse_audio_file_header(&mut audio_file_buf_reader, lofty_file_type) {
+            if let Err(error) = audio_file_buf_reader.seek(SeekFrom::Start(0)) {
+                return Some(
+                    Err(
+                        Error::FileSeekHeaderFailure {
+                            file_name: audio_file_name,
+                            error: error.to_string()
+                        }
+                    )
+                );
+            }
+
+            let track = match read_and_parse_audio_file_header(&mut audio_file_buf_reader, lofty_file_type) {
                 Ok(tagged_file) => {
                     if let Some(tag) = tagged_file.primary_tag() {
                         if let Some(title_string) = tag.title() {
@@ -130,25 +154,24 @@ impl Iterator for DirectoryTrackIterator {
                         }
                     };
 
-                    SourceTrackResult::Track(
-                        Track { metadata, buf_reader: audio_file_buf_reader }
-                    )
+                    Track { metadata, buf_reader: audio_file_buf_reader, issues: Vec::new() }
                 },
                 Err(error) => {
                     // TODO: failed metadata extraction list maybe??
-                    SourceTrackResult::PartialTrack(
-                        Track { metadata, buf_reader: audio_file_buf_reader },
-                        vec![
-                            Error::AudioTagsParseFailure {
-                                audio_file_name,
+                    Track {
+                        metadata,
+                        buf_reader: audio_file_buf_reader,
+
+                        issues: vec![
+                            TrackIssues::TagsParseFailure {
                                 error: error.to_string()
                             }
                         ]
-                    )
+                    }
                 },
             };
 
-            return Some(source_track_result);
+            return Some(Ok(track));
         }
 
         None

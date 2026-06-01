@@ -1,31 +1,40 @@
 use log::LevelFilter;
-use std::path::PathBuf;
-use audio_library::sources::{directory::{Directory, DirectoryOptions}, result::SourceTrackResult, traits::SourceTrack};
+use std::{env, path::PathBuf};
+use audio_library::sources::{directory::{Directory, options::DirectoryOptions}, traits::Source};
 
 fn main() {
     env_logger::builder()
         .filter_level(LevelFilter::Debug)
         .init();
 
-    let messy_library_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests").join("data").join("messy-library");
+    let path_string: String = env::args().skip(1).collect();
+
+    let library_path = match path_string.is_empty() {
+        true => PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests")
+            .join("data")
+            .join("messy-library"),
+        false => PathBuf::from(path_string),
+    };
+
+    log::info!("Reading library at '{}'...", library_path.display());
 
     let directory = Directory {
-        path: messy_library_path,
-        options: DirectoryOptions::default()
+        path: library_path,
+        options: DirectoryOptions {
+            trust_file_extension: false,
+            skip_parsing_track_tags: true,
+        }
     };
 
     for track_result in directory.get_tracks() {
         match track_result {
-            SourceTrackResult::Track(track) => {
+            Ok(track) => {
                 println!("Track Name: {}", *track.metadata.title);
+                println!("Track Issues: {:?}", *&track.issues);
             },
-            SourceTrackResult::PartialTrack(track, errors) => {
-                println!("Partial Track Name: {}", *track.metadata.title);
-                println!("Partial Track Errors: {:?}", errors);
-            },
-            SourceTrackResult::Error(error) => {
-                println!("Failed Track Error: {:?}", error);
+            Err(error) => {
+                log::error!("Failed Track Error: {:?}", error);
             },
         }
     }

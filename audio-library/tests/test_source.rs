@@ -2,7 +2,7 @@
 mod tests {
     use std::path::PathBuf;
 
-use audio_library::sources::{directory::{Directory, DirectoryOptions}, traits::SourceTrack};
+use audio_library::sources::{directory::{Directory, options::DirectoryOptions}, traits::{Source}};
 
     #[test]
     fn test_directory_source() {

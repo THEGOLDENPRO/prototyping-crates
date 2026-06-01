@@ -1,5 +1,6 @@
+use crate::library::LibraryTrackID;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum Event {
-    Ping
+    TrackAdded(LibraryTrackID)
 }

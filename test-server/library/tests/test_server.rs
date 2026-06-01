@@ -1,20 +1,37 @@
 #[cfg(test)]
 mod tests {
-    use std::thread;
+    use std::{path::PathBuf};
 
-use test_server_lib::{event::Event, local::LocalServer, server::Server};
+    use audio_library::sources::directory::{Directory, options::DirectoryOptions};
+    use test_server_lib::{error::Error, local::LocalServer, traits::Server};
+
     #[test]
-    fn test_server_gateway() -> Result<(), Box<dyn std::error::Error>> {
-        let server = Server::new(LocalServer {});
+    fn test_local_server_load_tracks() -> Result<(), Error> {
+        let messy_library_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent().unwrap()
+            .parent().unwrap()
+            .join("audio-library")
+            .join("tests")
+            .join("data")
+            .join("messy-library");
 
-        let (sender, receiver) = server.gateway;
+        let sources = vec![
+            Directory {
+                path: messy_library_path,
+                options: DirectoryOptions::default()
+            }
+        ];
 
-        // NOTE: simple for now, this will expand as other things expand
-        thread::spawn(move || {
-            sender.send(Event::Ping).unwrap();
-        });
+        let mut server = LocalServer::new(sources);
 
-        assert_eq!(receiver.recv()?, Event::Ping);
+        server.load_tracks()?;
+
+        let state = server.get_state();
+
+        let track_found = state.library.tracks.iter()
+            .any(|(_, track)| *track.metadata.title == "Stardust");
+
+        assert_eq!(track_found, true);
 
         Ok(())
     }

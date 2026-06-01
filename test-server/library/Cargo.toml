@@ -3,5 +3,13 @@ name = "test-server-lib"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+force-u64-library = []
+
 [dependencies]
 audio-library = { path = "../../audio-library" }
+
+log = "0.4.30"
+
+[dev-dependencies]
+env_logger = "0.11.10"

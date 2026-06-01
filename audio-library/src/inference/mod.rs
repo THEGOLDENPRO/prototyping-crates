@@ -4,10 +4,13 @@ use lofty::file::EXTENSIONS;
 
 #[derive(Default)]
 pub struct AudioTitleParseRules {
-    keep_square_brackets: bool
+    keep_track_numbers: bool,
+    keep_square_brackets: bool,
 }
 
-pub fn infer_and_parse_audio_title_from_path(path: &Path, file_name: &String, parsing_rules: AudioTitleParseRules) -> String {
+// TODO: infer track number
+
+pub fn infer_and_parse_audio_title(file_name: &String, path: &Path, parsing_rules: AudioTitleParseRules) -> String {
     let mut formatted_title = file_name.replace("_", " ");
 
     if let Some(extension) = path.extension() {
@@ -20,6 +23,14 @@ pub fn infer_and_parse_audio_title_from_path(path: &Path, file_name: &String, pa
 
     if !parsing_rules.keep_square_brackets {
         formatted_title.retain(|c| c != '[' && c != ']');
+    }
+
+    if !parsing_rules.keep_track_numbers {
+        formatted_title = formatted_title
+            .trim_start_matches(|c: char| c.is_ascii_digit())
+            .trim_start_matches('.')
+            .trim_start()
+            .to_string();
     }
 
     formatted_title
