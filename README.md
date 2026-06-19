@@ -8,6 +8,14 @@ Hi, this is my sandbox where I prototype and build random **Rust** crates and li
 
 The repository is in a mono-repo fashion so I treat each folder in root as it's own repository. Each mono-repo will have it's own ``README.md`` (though low-effort), *if I've created one*.
 
+## Status
+
+| Project  | State | Notes |
+| ------------- | ------------- | --- |
+| `audio-library` | Moved | Repo not public yet |
+| `test-server` | Moved | Repo not public yet |
+| `tokio-binary-protocol` | Done | Was just a proof of concept, may experiment with it more if needed. |
+
 <!-- You are welcome to browse sir / madam. 🫡
 
 ```
