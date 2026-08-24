@@ -1,0 +1,18 @@
+[package]
+name = "nano-std"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+nano-core = { path = "../../nano-core" }
+
+log = { workspace = true }
+heapless = { workspace = true }
+embedded-graphics = { workspace = true }
+embedded-graphics-simulator = { workspace = true }
+
+embassy-time = { workspace = true, features = ["std"] }
+embassy-executor = { workspace = true, features = ["platform-std"] }
+
+env_logger = "0.11.11"
+critical-section = { version = "1.2.0", features = ["std"] }

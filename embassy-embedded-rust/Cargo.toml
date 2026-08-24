@@ -1,0 +1,17 @@
+[workspace]
+resolver = "3"
+members = [
+    "nano-core",
+    "nano-boards/std",
+    "nano-boards/rp2040",
+]
+
+[workspace.dependencies]
+embassy-sync = { version = "0.8.0" }
+embassy-time = { version = "0.5.1", features = ["log"] }
+embassy-executor = { version = "0.10.0", features = ["executor-thread", "log"] }
+
+log = "0.4.34"
+heapless = "0.9.3"
+embedded-graphics = "0.8.2"
+embedded-graphics-simulator = "0.8.0"
